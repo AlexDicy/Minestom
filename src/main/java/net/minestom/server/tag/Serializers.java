@@ -5,10 +5,14 @@ import org.jglrxavpok.hephaistos.nbt.*;
 
 import java.util.function.Function;
 
+/**
+ * Basic serializers for {@link Tag tags}.
+ */
 final class Serializers {
-    static final Entry<?, ?> VOID = new Entry<>(null, null);
+    static final Entry<TagHandlerImpl, NBTCompound> PATH = new Entry<>(TagHandlerImpl::fromCompound, TagHandlerImpl::asCompound);
 
     static final Entry<Byte, NBTByte> BYTE = new Entry<>(NBTByte::getValue, NBT::Byte);
+    static final Entry<Boolean, NBTByte> BOOLEAN = new Entry<>(NBTByte::asBoolean, NBT::Boolean);
     static final Entry<Short, NBTShort> SHORT = new Entry<>(NBTShort::getValue, NBT::Short);
     static final Entry<Integer, NBTInt> INT = new Entry<>(NBTInt::getValue, NBT::Int);
     static final Entry<Long, NBTLong> LONG = new Entry<>(NBTLong::getValue, NBT::Long);
@@ -19,7 +23,7 @@ final class Serializers {
 
     static final Entry<ItemStack, NBTCompound> ITEM = new Entry<>(ItemStack::fromItemNBT, ItemStack::toItemNBT);
 
-    static <T> Entry<T,?> fromTagSerializer(TagSerializer<T> serializer) {
+    static <T> Entry<T, NBTCompound> fromTagSerializer(TagSerializer<T> serializer) {
         return new Serializers.Entry<>(
                 (NBTCompound compound) -> {
                     if (compound.isEmpty()) return null;
