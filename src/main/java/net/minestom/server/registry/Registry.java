@@ -73,7 +73,7 @@ public final class Registry {
     public static <T extends ProtocolObject> Container<T> createContainer(Resource resource, Container.Loader<T> loader) {
         var entries = Registry.load(resource);
         Map<String, T> namespaces = new HashMap<>(entries.size());
-        ObjectArray<T> ids = new ObjectArray<>(entries.size());
+        ObjectArray<T> ids = ObjectArray.singleThread(entries.size());
         for (var entry : entries.entrySet()) {
             final String namespace = entry.getKey();
             final Properties properties = Properties.fromMap(entry.getValue());
@@ -200,7 +200,7 @@ public final class Registry {
             }
             {
                 final String string = main.getString("collisionShape");
-                this.shape = CollisionUtils.parseBlockShape(string, this.materialSupplier);
+                this.shape = CollisionUtils.parseBlockShape(string, this);
             }
         }
 

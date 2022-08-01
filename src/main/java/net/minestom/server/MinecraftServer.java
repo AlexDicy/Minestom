@@ -60,10 +60,6 @@ public final class MinecraftServer {
     public static final int TICK_PER_SECOND = Integer.getInteger("minestom.tps", 20);
     public static final int TICK_MS = 1000 / TICK_PER_SECOND;
 
-    // Network monitoring
-    private static int rateLimit = 300;
-    private static int maxPacketSize = 30_000;
-
     // In-Game Manager
     private static volatile ServerProcess serverProcess;
 
@@ -113,42 +109,6 @@ public final class MinecraftServer {
     }
 
     /**
-     * Gets the maximum number of packets a client can send over 1 second.
-     *
-     * @return the packet count limit over 1 second, 0 if not enabled
-     */
-    public static int getRateLimit() {
-        return rateLimit;
-    }
-
-    /**
-     * Changes the number of packet a client can send over 1 second without being disconnected.
-     *
-     * @param rateLimit the number of packet, 0 to disable
-     */
-    public static void setRateLimit(int rateLimit) {
-        MinecraftServer.rateLimit = rateLimit;
-    }
-
-    /**
-     * Gets the maximum packet size (in bytes) that a client can send without getting disconnected.
-     *
-     * @return the maximum packet size
-     */
-    public static int getMaxPacketSize() {
-        return maxPacketSize;
-    }
-
-    /**
-     * Changes the maximum packet size (in bytes) that a client can send without getting disconnected.
-     *
-     * @param maxPacketSize the new max packet size
-     */
-    public static void setMaxPacketSize(int maxPacketSize) {
-        MinecraftServer.maxPacketSize = maxPacketSize;
-    }
-
-    /**
      * Gets the server difficulty showed in game option.
      *
      * @return the server difficulty
@@ -177,31 +137,31 @@ public final class MinecraftServer {
         return serverProcess.eventHandler();
     }
 
-    public static PacketListenerManager getPacketListenerManager() {
+    public static @NotNull PacketListenerManager getPacketListenerManager() {
         return serverProcess.packetListener();
     }
 
-    public static InstanceManager getInstanceManager() {
+    public static @NotNull InstanceManager getInstanceManager() {
         return serverProcess.instance();
     }
 
-    public static BlockManager getBlockManager() {
+    public static @NotNull BlockManager getBlockManager() {
         return serverProcess.block();
     }
 
-    public static CommandManager getCommandManager() {
+    public static @NotNull CommandManager getCommandManager() {
         return serverProcess.command();
     }
 
-    public static RecipeManager getRecipeManager() {
+    public static @NotNull RecipeManager getRecipeManager() {
         return serverProcess.recipe();
     }
 
-    public static TeamManager getTeamManager() {
+    public static @NotNull TeamManager getTeamManager() {
         return serverProcess.team();
     }
 
-    public static SchedulerManager getSchedulerManager() {
+    public static @NotNull SchedulerManager getSchedulerManager() {
         return serverProcess.scheduler();
     }
 
@@ -210,23 +170,23 @@ public final class MinecraftServer {
      *
      * @return the benchmark manager
      */
-    public static BenchmarkManager getBenchmarkManager() {
+    public static @NotNull BenchmarkManager getBenchmarkManager() {
         return serverProcess.benchmark();
     }
 
-    public static ExceptionManager getExceptionManager() {
+    public static @NotNull ExceptionManager getExceptionManager() {
         return serverProcess.exception();
     }
 
-    public static ConnectionManager getConnectionManager() {
+    public static @NotNull ConnectionManager getConnectionManager() {
         return serverProcess.connection();
     }
 
-    public static BossBarManager getBossBarManager() {
+    public static @NotNull BossBarManager getBossBarManager() {
         return serverProcess.bossBar();
     }
 
-    public static PacketProcessor getPacketProcessor() {
+    public static @NotNull PacketProcessor getPacketProcessor() {
         return serverProcess.packetProcessor();
     }
 

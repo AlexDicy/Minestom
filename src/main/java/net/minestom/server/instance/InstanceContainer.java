@@ -57,7 +57,7 @@ public class InstanceContainer extends Instance {
     // (chunk index -> chunk) map, contains all the chunks in the instance
     // used as a monitor when access is required
     private final Long2ObjectSyncMap<Chunk> chunks = Long2ObjectSyncMap.hashmap();
-    private final Long2ObjectSyncMap<CompletableFuture<Chunk>> loadingChunks = Long2ObjectSyncMap.hashmap();
+    private final Map<Long, CompletableFuture<Chunk>> loadingChunks = new ConcurrentHashMap<>();
 
     private final Lock changingBlockLock = new ReentrantLock();
     private final Map<Point, Block> currentlyChangingBlocks = new HashMap<>();
@@ -199,7 +199,7 @@ public class InstanceContainer extends Instance {
                     new BlockHandler.PlayerDestroy(block, this, blockPosition, player));
             // Send the block break effect packet
             PacketUtils.sendGroupedPacket(chunk.getViewers(),
-                    new EffectPacket(2001 /*Block break + block break sound*/, blockPosition, resultBlock.stateId(), false),
+                    new EffectPacket(2001 /*Block break + block break sound*/, blockPosition, block.stateId(), false),
                     // Prevent the block breaker to play the particles and sound two times
                     (viewer) -> !viewer.equals(player));
         }
@@ -275,7 +275,7 @@ public class InstanceContainer extends Instance {
                     EventDispatcher.call(new InstanceChunkLoadEvent(this, chunk));
                     final CompletableFuture<Chunk> future = this.loadingChunks.remove(index);
                     assert future == completableFuture : "Invalid future: " + future;
-                    future.complete(chunk);
+                    completableFuture.complete(chunk);
                 })
                 .exceptionally(throwable -> {
                     MinecraftServer.getExceptionManager().handleException(throwable);
@@ -322,6 +322,12 @@ public class InstanceContainer extends Instance {
                                 final Chunk forkChunk = start.chunkX() == chunkX && start.chunkZ() == chunkZ ? chunk : getChunkAt(start);
                                 if (forkChunk != null) {
                                     applyFork(forkChunk, sectionModifier);
+                                    // Update players
+                                    if (forkChunk instanceof DynamicChunk dynamicChunk) {
+                                        dynamicChunk.chunkCache.invalidate();
+                                        dynamicChunk.lightCache.invalidate();
+                                    }
+                                    forkChunk.sendChunk();
                                 } else {
                                     final long index = ChunkUtils.getChunkIndex(start);
                                     this.generationForks.compute(index, (i, sectionModifiers) -> {
@@ -339,7 +345,6 @@ public class InstanceContainer extends Instance {
                     MinecraftServer.getExceptionManager().handleException(e);
                 } finally {
                     // End generation
-                    chunk.sendChunk();
                     refreshLastBlockChangeTime();
                     resultFuture.complete(chunk);
                 }
@@ -584,7 +589,7 @@ public class InstanceContainer extends Instance {
      */
     private boolean isAlreadyChanged(@NotNull Point blockPosition, @NotNull Block block) {
         final Block changedBlock = currentlyChangingBlocks.get(blockPosition);
-        return changedBlock != null && changedBlock.id() == block.id();
+        return Objects.equals(changedBlock, block);
     }
 
     /**

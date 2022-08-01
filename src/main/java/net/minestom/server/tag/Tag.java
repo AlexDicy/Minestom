@@ -1,7 +1,8 @@
 package net.minestom.server.tag;
 
+import net.kyori.adventure.text.Component;
 import net.minestom.server.item.ItemStack;
-import net.minestom.server.utils.collection.IndexMap;
+import net.minestom.server.utils.collection.AutoIncrementMap;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +16,7 @@ import org.jglrxavpok.hephaistos.nbt.mutable.MutableNBTCompound;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -28,7 +30,7 @@ import java.util.function.UnaryOperator;
  */
 @ApiStatus.NonExtendable
 public class Tag<T> {
-    private static final IndexMap<String> INDEX_MAP = new IndexMap<>();
+    private static final AutoIncrementMap<String> INDEX_MAP = new AutoIncrementMap<>();
 
     record PathEntry(String name, int index) {
     }
@@ -60,7 +62,7 @@ public class Tag<T> {
     }
 
     static <T, N extends NBT> Tag<T> tag(@NotNull String key, @NotNull Serializers.Entry<T, N> entry) {
-        return new Tag<>(INDEX_MAP.get(key), key, entry.read(), (Serializers.Entry<T, NBT>) entry,
+        return new Tag<>(INDEX_MAP.get(key), key, entry.reader(), (Serializers.Entry<T, NBT>) entry,
                 null, null, null, 0);
     }
 
@@ -95,57 +97,41 @@ public class Tag<T> {
     @Contract(value = "_, _ -> new", pure = true)
     public <R> Tag<R> map(@NotNull Function<T, R> readMap,
                           @NotNull Function<R, T> writeMap) {
-        if (entry == Serializers.NBT_ENTRY)
-            throw new IllegalArgumentException("Cannot create a list from a NBT entry");
         var entry = this.entry;
-        final Function<NBT, R> readFunction = entry.read().andThen(t -> {
+        final Function<NBT, R> readFunction = entry.reader().andThen(t -> {
             if (t == null) return null;
             return readMap.apply(t);
         });
-        final Function<R, NBT> writeFunction = writeMap.andThen(entry.write());
+        final Function<R, NBT> writeFunction = writeMap.andThen(entry.writer());
         return new Tag<>(index, key, readMap,
-                new Serializers.Entry<>(readFunction, writeFunction),
+                new Serializers.Entry<>(entry.nbtType(), readFunction, writeFunction),
                 // Default value
-                () -> readMap.apply(createDefault()),
+                () -> {
+                    T defaultValue = createDefault();
+                    if (defaultValue == null) return null;
+                    return readMap.apply(defaultValue);
+                },
                 path, null, listScope);
     }
 
     @ApiStatus.Experimental
     @Contract(value = "-> new", pure = true)
     public Tag<List<T>> list() {
-        if (entry == Serializers.NBT_ENTRY)
-            throw new IllegalArgumentException("Cannot create a list from a NBT entry");
         var entry = this.entry;
-        var readFunction = entry.read();
-        var writeFunction = entry.write();
-        var listEntry = new Serializers.Entry<List<T>, NBT>(
+        var readFunction = entry.reader();
+        var writeFunction = entry.writer();
+        var listEntry = new Serializers.Entry<List<T>, NBTList<?>>(
+                NBTType.TAG_List,
                 read -> {
-                    var list = (NBTList<?>) read;
-                    final int size = list.getSize();
-                    if (size == 0)
-                        return List.of();
-                    T[] array = (T[]) new Object[size];
-                    for (int i = 0; i < size; i++) {
-                        array[i] = readFunction.apply(list.get(i));
-                    }
-                    return List.of(array);
+                    if (read.isEmpty()) return List.of();
+                    return read.asListView().stream().map(readFunction).toList();
                 },
                 write -> {
-                    final int size = write.size();
-                    if (size == 0)
-                        return new NBTList<>(NBTType.TAG_String); // String is the default type for lists
-                    NBTType<NBT> type = null;
-                    NBT[] array = new NBT[size];
-                    for (int i = 0; i < size; i++) {
-                        final NBT nbt = writeFunction.apply(write.get(i));
-                        if (type == null) {
-                            type = (NBTType<NBT>) nbt.getID();
-                        } else if (type != nbt.getID()) {
-                            throw new IllegalArgumentException("All elements of the list must have the same type");
-                        }
-                        array[i] = nbt;
-                    }
-                    return NBT.List(type, List.of(array));
+                    if (write.isEmpty())
+                        return NBT.List(NBTType.TAG_String); // String is the default type for lists
+                    final List<NBT> list = write.stream().map(writeFunction).toList();
+                    final NBTType<?> type = list.get(0).getID();
+                    return NBT.List(type, list);
                 });
         UnaryOperator<List<T>> co = this.copy != null ? ts -> {
             final int size = ts.size();
@@ -159,7 +145,8 @@ public class Tag<T> {
             }
             return shallowCopy ? List.copyOf(ts) : List.of(array);
         } : List::copyOf;
-        return new Tag<>(index, key, readComparator, listEntry, null, path, co, listScope + 1);
+        return new Tag<>(index, key, readComparator, Serializers.Entry.class.cast(listEntry),
+                null, path, co, listScope + 1);
     }
 
     @ApiStatus.Experimental
@@ -182,7 +169,7 @@ public class Tag<T> {
         final NBT readable = isView() ? nbt.toCompound() : nbt.get(key);
         final T result;
         try {
-            if (readable == null || (result = entry.read().apply(readable)) == null)
+            if (readable == null || (result = entry.read(readable)) == null)
                 return createDefault();
             return result;
         } catch (ClassCastException e) {
@@ -192,7 +179,7 @@ public class Tag<T> {
 
     public void write(@NotNull MutableNBTCompound nbtCompound, @Nullable T value) {
         if (value != null) {
-            final NBT nbt = entry.write().apply(value);
+            final NBT nbt = entry.write(value);
             if (isView()) nbtCompound.copyFrom((NBTCompoundLike) nbt);
             else nbtCompound.set(key, nbt);
         } else {
@@ -219,8 +206,13 @@ public class Tag<T> {
     }
 
     final T createDefault() {
-        final var supplier = defaultValue;
+        final Supplier<T> supplier = defaultValue;
         return supplier != null ? supplier.get() : null;
+    }
+
+    final T copyValue(@NotNull T value) {
+        final UnaryOperator<T> copier = copy;
+        return copier != null ? copier.apply(value) : value;
     }
 
     @Override
@@ -273,8 +265,17 @@ public class Tag<T> {
         return tag(key, Serializers.STRING);
     }
 
+    @ApiStatus.Experimental
+    public static @NotNull Tag<UUID> UUID(@NotNull String key) {
+        return tag(key, Serializers.UUID);
+    }
+
     public static @NotNull Tag<ItemStack> ItemStack(@NotNull String key) {
         return tag(key, Serializers.ITEM);
+    }
+
+    public static @NotNull Tag<Component> Component(@NotNull String key) {
+        return tag(key, Serializers.COMPONENT);
     }
 
     /**

@@ -90,6 +90,34 @@ public class TagPathTest {
     }
 
     @Test
+    public void secondPathClearSnbt() {
+        var handler = TagHandler.newHandler();
+        var numberTag = Tag.Integer("number").path("path1", "path2");
+        var stringTag = Tag.String("string").path("path1");
+        handler.setTag(numberTag, 5);
+        handler.setTag(stringTag, "test");
+        assertEqualsSNBT("""
+                {
+                  "path1": {
+                    "path2": {
+                      "number":5
+                    },
+                    "string":"test"
+                  }
+                }
+                """, handler.asCompound());
+
+        handler.removeTag(numberTag);
+        assertEqualsSNBT("""
+                {
+                  "path1": {
+                    "string":"test"
+                  }
+                }
+                """, handler.asCompound());
+    }
+
+    @Test
     public void differentPath() {
         var handler = TagHandler.newHandler();
         var tag = Tag.Integer("number");
@@ -150,6 +178,15 @@ public class TagPathTest {
         var path = Tag.Integer("value").path("key");
         handler.setTag(path, 5);
         assertNull(handler.getTag(tag));
+    }
+
+    @Test
+    public void pathInvalidClear() {
+        var handler = TagHandler.newHandler();
+        var tag1 = Tag.Integer("pathInvalidClear1").path("key");
+        var tag2 = Tag.Integer("pathInvalidClear2").path("key");
+        handler.setTag(tag1, 5);
+        handler.setTag(tag2, null);
     }
 
     @Test
