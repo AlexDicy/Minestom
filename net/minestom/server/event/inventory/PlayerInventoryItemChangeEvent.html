@@ -79,12 +79,12 @@ loadScripts(document, 'script');</script>
 <section class="class-description" id="class-description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="../Event.html" title="interface in net.minestom.server.event">Event</a></code>, <code><a href="../trait/EntityEvent.html" title="interface in net.minestom.server.event.trait">EntityEvent</a></code>, <code><a href="../trait/EntityInstanceEvent.html" title="interface in net.minestom.server.event.trait">EntityInstanceEvent</a></code>, <code><a href="../trait/InstanceEvent.html" title="interface in net.minestom.server.event.trait">InstanceEvent</a></code>, <code><a href="../trait/InventoryEvent.html" title="interface in net.minestom.server.event.trait">InventoryEvent</a></code>, <code><a href="../trait/PlayerEvent.html" title="interface in net.minestom.server.event.trait">PlayerEvent</a></code>, <code><a href="../trait/RecursiveEvent.html" title="interface in net.minestom.server.event.trait">RecursiveEvent</a></code></dd>
+<dd><code><a href="../Event.html" title="interface in net.minestom.server.event">Event</a></code>, <code><a href="../trait/EntityEvent.html" title="interface in net.minestom.server.event.trait">EntityEvent</a></code>, <code><a href="../trait/EntityInstanceEvent.html" title="interface in net.minestom.server.event.trait">EntityInstanceEvent</a></code>, <code><a href="../trait/InstanceEvent.html" title="interface in net.minestom.server.event.trait">InstanceEvent</a></code>, <code><a href="../trait/InventoryEvent.html" title="interface in net.minestom.server.event.trait">InventoryEvent</a></code>, <code><a href="../trait/PlayerEvent.html" title="interface in net.minestom.server.event.trait">PlayerEvent</a></code>, <code><a href="../trait/PlayerInstanceEvent.html" title="interface in net.minestom.server.event.trait">PlayerInstanceEvent</a></code>, <code><a href="../trait/RecursiveEvent.html" title="interface in net.minestom.server.event.trait">RecursiveEvent</a></code></dd>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">PlayerInventoryItemChangeEvent</span>
 <span class="extends-implements">extends <a href="InventoryItemChangeEvent.html" title="class in net.minestom.server.event.inventory">InventoryItemChangeEvent</a>
-implements <a href="../trait/PlayerEvent.html" title="interface in net.minestom.server.event.trait">PlayerEvent</a>, <a href="../trait/EntityInstanceEvent.html" title="interface in net.minestom.server.event.trait">EntityInstanceEvent</a></span></div>
+implements <a href="../trait/PlayerInstanceEvent.html" title="interface in net.minestom.server.event.trait">PlayerInstanceEvent</a></span></div>
 <div class="block">Called when <a href="../../inventory/AbstractInventory.html#safeItemInsert(int,net.minestom.server.item.ItemStack)"><code>AbstractInventory.safeItemInsert(int, ItemStack)</code></a> is being invoked on a <a href="../../inventory/PlayerInventory.html" title="class in net.minestom.server.inventory"><code>PlayerInventory</code></a>.
  This event cannot be cancelled and items related to the change are already moved.
  <p>
@@ -103,8 +103,8 @@ implements <a href="../trait/PlayerEvent.html" title="interface in net.minestom.
 <div class="table-header col-last">Description</div>
 <div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(net.minestom.server.entity.Player,int,net.minestom.server.item.ItemStack,net.minestom.server.item.ItemStack)" class="member-name-link">PlayerInventoryItemChangeEvent</a><wbr>(@NotNull <a href="../../entity/Player.html" title="class in net.minestom.server.entity">Player</a>&nbsp;player,
  int&nbsp;slot,
- @NotNull <a href="../../item/ItemStack.html" title="class in net.minestom.server.item">ItemStack</a>&nbsp;previousItem,
- @NotNull <a href="../../item/ItemStack.html" title="class in net.minestom.server.item">ItemStack</a>&nbsp;newItem)</code></div>
+ @NotNull <a href="../../item/ItemStack.html" title="interface in net.minestom.server.item">ItemStack</a>&nbsp;previousItem,
+ @NotNull <a href="../../item/ItemStack.html" title="interface in net.minestom.server.item">ItemStack</a>&nbsp;newItem)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
@@ -158,9 +158,9 @@ implements <a href="../trait/PlayerEvent.html" title="interface in net.minestom.
  @NotNull <a href="../../entity/Player.html" title="class in net.minestom.server.entity">Player</a>&nbsp;player,
  int&nbsp;slot,
  @NotNull
- @NotNull <a href="../../item/ItemStack.html" title="class in net.minestom.server.item">ItemStack</a>&nbsp;previousItem,
+ @NotNull <a href="../../item/ItemStack.html" title="interface in net.minestom.server.item">ItemStack</a>&nbsp;previousItem,
  @NotNull
- @NotNull <a href="../../item/ItemStack.html" title="class in net.minestom.server.item">ItemStack</a>&nbsp;newItem)</span></div>
+ @NotNull <a href="../../item/ItemStack.html" title="interface in net.minestom.server.item">ItemStack</a>&nbsp;newItem)</span></div>
 </section>
 </li>
 </ul>
